@@ -77,45 +77,40 @@ export function useMap(onLocationSelect: (lng: number, lat: number) => void) {
     const map = mapRef.current;
     if (!map) return;
 
-    if (map.getSource(ISOCHRONE_SOURCE)) {
-      (map.getSource(ISOCHRONE_SOURCE) as mapboxgl.GeoJSONSource).setData(data);
-    } else {
-      map.addSource(ISOCHRONE_SOURCE, { type: 'geojson', data });
-      map.addLayer({
-        id: ISOCHRONE_LAYER,
-        type: 'fill',
-        source: ISOCHRONE_SOURCE,
-        paint: {
-          'fill-color': [
-            'match',
-            ['get', 'contour'],
-            ...data.features.flatMap((f, i) => [
-              f.properties?.contour ?? i,
-              CONTOUR_COLORS[i % CONTOUR_COLORS.length],
-            ]),
-            '#999',
-          ],
-          'fill-opacity': 0.3,
-        },
-      });
-      map.addLayer({
-        id: `${ISOCHRONE_LAYER}-outline`,
-        type: 'line',
-        source: ISOCHRONE_SOURCE,
-        paint: {
-          'line-color': [
-            'match',
-            ['get', 'contour'],
-            ...data.features.flatMap((f, i) => [
-              f.properties?.contour ?? i,
-              CONTOUR_COLORS[i % CONTOUR_COLORS.length],
-            ]),
-            '#999',
-          ],
-          'line-width': 2,
-        },
-      });
-    }
+    // Always clear and re-add so paint expressions match current data
+    if (map.getLayer(`${ISOCHRONE_LAYER}-outline`)) map.removeLayer(`${ISOCHRONE_LAYER}-outline`);
+    if (map.getLayer(ISOCHRONE_LAYER)) map.removeLayer(ISOCHRONE_LAYER);
+    if (map.getSource(ISOCHRONE_SOURCE)) map.removeSource(ISOCHRONE_SOURCE);
+
+    const colorExpr: mapboxgl.ExpressionSpecification = [
+      'match',
+      ['get', 'contour'],
+      ...data.features.flatMap((f, i) => [
+        f.properties?.contour ?? i,
+        CONTOUR_COLORS[i % CONTOUR_COLORS.length],
+      ]),
+      CONTOUR_COLORS[0],
+    ];
+
+    map.addSource(ISOCHRONE_SOURCE, { type: 'geojson', data });
+    map.addLayer({
+      id: ISOCHRONE_LAYER,
+      type: 'fill',
+      source: ISOCHRONE_SOURCE,
+      paint: {
+        'fill-color': colorExpr,
+        'fill-opacity': 0.3,
+      },
+    });
+    map.addLayer({
+      id: `${ISOCHRONE_LAYER}-outline`,
+      type: 'line',
+      source: ISOCHRONE_SOURCE,
+      paint: {
+        'line-color': colorExpr,
+        'line-width': 2,
+      },
+    });
 
     // Fit map to isochrone bounds
     const bounds = new mapboxgl.LngLatBounds();
