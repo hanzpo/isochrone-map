@@ -1,0 +1,272 @@
+@import 'mapbox-gl/dist/mapbox-gl.css';
+@import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css';
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1a1a2e;
+}
+
+.app {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* Map */
+
+.map-view {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.map-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Controls panel */
+
+.controls {
+  position: absolute;
+  top: 12px;
+  right: 54px;
+  background: white;
+  border-radius: 10px;
+  padding: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 1;
+  width: 260px;
+}
+
+.controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.controls-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #6366F1;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.label-unit {
+  text-transform: none;
+  font-weight: 400;
+}
+
+/* Profile buttons */
+
+.profile-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.profile-buttons button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.profile-buttons button:hover {
+  border-color: #c7c9ce;
+  background: #f9fafb;
+}
+
+.profile-buttons button.active {
+  background: #6366F1;
+  border-color: #6366F1;
+  color: white;
+}
+
+.profile-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.profile-label {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Contour inputs */
+
+.contour-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contour-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contour-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.contour-inputs input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.contour-inputs input:focus {
+  border-color: #6366F1;
+}
+
+/* Apply button */
+
+.apply-button {
+  width: 100%;
+  padding: 9px 0;
+  border: none;
+  border-radius: 6px;
+  background: #6366F1;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.apply-button:hover:not(:disabled) {
+  background: #4F46E5;
+}
+
+.apply-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Hint */
+
+.controls-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 0;
+}
+
+/* Legend */
+
+.legend {
+  position: absolute;
+  bottom: 32px;
+  right: 12px;
+  background: white;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.legend-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.legend-item + .legend-item {
+  margin-top: 4px;
+}
+
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  opacity: 0.6;
+  display: inline-block;
+}
+
+/* Error */
+
+.error-banner {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ef4444;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 2;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  text-align: center;
+}
