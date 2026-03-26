@@ -96,8 +96,13 @@ export function Controls({
     return key in inputValues ? inputValues[key] : String(stateValue);
   }
 
+  const [stowed, setStowed] = useState(false);
+
   return (
-    <div className="controls">
+    <div className={`controls${stowed ? ' controls-stowed' : ''}`}>
+      <button className="controls-toggle" onClick={() => setStowed(!stowed)} aria-label={stowed ? 'Expand controls' : 'Collapse controls'}>
+        <span className="controls-toggle-handle" />
+      </button>
       <div className="controls-header">
         <h2>Isochrone</h2>
         {loading && <span className="spinner" />}

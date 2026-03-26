@@ -270,3 +270,113 @@ body,
   max-width: 400px;
   text-align: center;
 }
+
+/* Controls toggle (mobile only) */
+
+.controls-toggle {
+  display: none;
+}
+
+/* Mobile responsive */
+
+@media (max-width: 640px) {
+  .controls {
+    position: absolute;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    max-height: 55vh;
+    overflow-y: auto;
+    gap: 14px;
+    transition: transform 0.3s ease;
+  }
+
+  .controls-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0 0 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .controls-toggle-handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d1d5db;
+  }
+
+  .controls-stowed {
+    transform: translateY(calc(100% - 28px));
+  }
+
+  .controls-stowed .controls-toggle-handle {
+    background: #9ca3af;
+  }
+
+  .profile-buttons button {
+    padding: 10px 4px;
+    gap: 4px;
+  }
+
+  .profile-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .profile-label {
+    font-size: 11px;
+  }
+
+  .contour-inputs input {
+    padding: 10px 10px;
+    font-size: 14px;
+  }
+
+  .apply-button {
+    padding: 12px 0;
+    font-size: 14px;
+  }
+
+  .legend {
+    bottom: auto;
+    top: 12px;
+    right: 12px;
+  }
+
+  .error-banner {
+    bottom: auto;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    max-width: none;
+  }
+
+  /* Move geocoder below nav controls on mobile */
+  .mapboxgl-ctrl-top-left {
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .mapboxgl-ctrl-top-left .mapboxgl-ctrl-geocoder {
+    max-width: none;
+    width: 100%;
+    margin: 8px;
+  }
+
+  .mapboxgl-ctrl-top-right {
+    top: 0;
+    right: 0;
+  }
+}
