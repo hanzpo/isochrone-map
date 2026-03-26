@@ -1,18 +1,20 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMap } from '../hooks/useMap';
 import { useIsochrone } from '../hooks/useIsochrone';
 import { Controls } from './Controls';
 import { Legend } from './Legend';
 
 export function MapView() {
-  const locationRef = useRef<{ lng: number; lat: number } | null>(null);
+  const [location, setLocation] = useState<{ lng: number; lat: number } | null>(null);
+  const locationRef = useRef(location);
+  locationRef.current = location;
 
   const iso = useIsochrone();
   const generateRef = useRef(iso.generate);
   generateRef.current = iso.generate;
 
   const onLocationSelect = useCallback((lng: number, lat: number) => {
-    locationRef.current = { lng, lat };
+    setLocation({ lng, lat });
   }, []);
 
   const { containerRef, ready, renderIsochrone } = useMap(onLocationSelect);
@@ -42,7 +44,7 @@ export function MapView() {
           transitMinutes={iso.transitMinutes}
           onTransitMinutesChange={iso.setTransitMinutes}
           loading={iso.loading}
-          hasLocation={!!locationRef.current}
+          hasLocation={!!location}
           onApply={handleApply}
         />
       )}
