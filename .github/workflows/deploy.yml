@@ -20,6 +20,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
 
       - uses: cloudflare/wrangler-action@v3
         with:
