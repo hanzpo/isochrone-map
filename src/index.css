@@ -553,11 +553,9 @@ body,
 
   .mapboxgl-ctrl-top-left .mapboxgl-ctrl-geocoder {
     max-width: none;
-    width: 100%;
+    width: calc(100% - 16px);
     margin: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    border-radius: 10px;
+    min-width: 0;
   }
 
   /* Push zoom controls below the geocoder so they don't clip */
