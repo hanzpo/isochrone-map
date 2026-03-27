@@ -15,7 +15,9 @@ body,
   height: 100%;
   width: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: #1a1a2e;
+  color: #0a0a0a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .app {
@@ -37,19 +39,88 @@ body,
   width: 100%;
 }
 
+/* Geocoder overrides */
+
+.mapboxgl-ctrl-geocoder {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+}
+
+.mapboxgl-ctrl-geocoder--input {
+  font-size: 14px;
+  color: #0a0a0a;
+  height: 40px;
+  padding: 6px 40px;
+}
+
+.mapboxgl-ctrl-geocoder--input::placeholder {
+  color: #9ca3af;
+}
+
+.mapboxgl-ctrl-geocoder--input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.mapboxgl-ctrl-geocoder--icon-search {
+  fill: #9ca3af;
+  top: 10px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+.mapboxgl-ctrl-geocoder--button {
+  background: none;
+  top: 8px;
+  right: 6px;
+}
+
+.mapboxgl-ctrl-geocoder--icon-close {
+  fill: #9ca3af;
+  width: 16px;
+  height: 16px;
+}
+
+.mapboxgl-ctrl-geocoder--button:hover .mapboxgl-ctrl-geocoder--icon-close {
+  fill: #0a0a0a;
+}
+
+.mapboxgl-ctrl-geocoder .suggestions {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.mapboxgl-ctrl-geocoder .suggestions > .active > a,
+.mapboxgl-ctrl-geocoder .suggestions > li > a:hover {
+  background-color: #f5f5f5;
+  color: #0a0a0a;
+}
+
+.mapboxgl-ctrl-geocoder--suggestion-title {
+  font-weight: 500;
+}
+
 /* Controls panel */
 
 .controls {
   position: absolute;
   top: 12px;
   right: 54px;
-  background: white;
-  border-radius: 10px;
-  padding: 18px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   z-index: 1;
   width: 260px;
 }
@@ -61,17 +132,17 @@ body,
 }
 
 .controls-header h2 {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
   margin: 0;
 }
 
 .spinner {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border: 2px solid #e5e7eb;
-  border-top-color: #6366F1;
+  border-top-color: #0a0a0a;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
 }
@@ -83,20 +154,37 @@ body,
 .control-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .control-group label {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
 }
 
 .label-unit {
   text-transform: none;
   font-weight: 400;
+}
+
+/* Desktop: structural wrappers are transparent */
+.controls-swipe-area {
+  display: contents;
+}
+
+.controls-peek {
+  display: contents;
+}
+
+.controls-body {
+  display: contents;
+}
+
+.controls-body-inner {
+  display: contents;
 }
 
 /* Profile buttons */
@@ -111,24 +199,26 @@ body,
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   padding: 8px 4px;
-  border: 1.5px solid #e5e7eb;
+  border: 1px solid #e3e3e3;
   border-radius: 8px;
-  background: white;
+  background: #fff;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  color: #6b7280;
 }
 
 .profile-buttons button:hover {
-  border-color: #c7c9ce;
-  background: #f9fafb;
+  border-color: #c9c9c9;
+  background: #fafafa;
+  color: #0a0a0a;
 }
 
 .profile-buttons button.active {
-  background: #6366F1;
-  border-color: #6366F1;
-  color: white;
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  color: #fff;
 }
 
 .profile-icon {
@@ -138,8 +228,9 @@ body,
 }
 
 .profile-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 /* Contour inputs */
@@ -166,16 +257,18 @@ body,
 .contour-inputs input {
   width: 100%;
   padding: 7px 10px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 6px;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
   font-size: 13px;
   text-align: center;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background: #fff;
 }
 
 .contour-inputs input:focus {
-  border-color: #6366F1;
+  border-color: #0a0a0a;
+  box-shadow: 0 0 0 3px rgba(10, 10, 10, 0.08);
 }
 
 /* Apply button */
@@ -184,21 +277,22 @@ body,
   width: 100%;
   padding: 9px 0;
   border: none;
-  border-radius: 6px;
-  background: #6366F1;
-  color: white;
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #fff;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s ease;
+  letter-spacing: -0.1px;
 }
 
 .apply-button:hover:not(:disabled) {
-  background: #4F46E5;
+  background: #1a1a1a;
 }
 
 .apply-button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -217,16 +311,17 @@ body,
   position: absolute;
   bottom: 32px;
   right: 12px;
-  background: white;
-  border-radius: 8px;
+  background: #fff;
+  border-radius: 10px;
   padding: 10px 14px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   z-index: 1;
 }
 
 .legend-title {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 500;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -246,10 +341,10 @@ body,
 }
 
 .legend-swatch {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 3px;
-  opacity: 0.6;
+  opacity: 0.7;
   display: inline-block;
 }
 
@@ -261,7 +356,7 @@ body,
   left: 50%;
   transform: translateX(-50%);
   background: #ef4444;
-  color: white;
+  color: #fff;
   padding: 10px 20px;
   border-radius: 8px;
   font-size: 13px;
@@ -277,34 +372,75 @@ body,
   display: none;
 }
 
-/* Mobile responsive */
+/* Controls backdrop (mobile only) */
+
+.controls-backdrop {
+  display: none;
+}
+
+/* Inline legend in controls (mobile only) */
+
+.controls-legend {
+  display: none;
+}
+
+/* ─── Mobile responsive ─── */
 
 @media (max-width: 640px) {
+  /* Bottom sheet */
   .controls {
-    position: absolute;
+    position: fixed;
     top: auto;
     bottom: 0;
     left: 0;
     right: 0;
     width: 100%;
     border-radius: 16px 16px 0 0;
-    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
-    max-height: 55vh;
+    padding: 0 20px calc(16px + env(safe-area-inset-bottom));
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.06), 0 -4px 20px rgba(0, 0, 0, 0.06);
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    z-index: 10;
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform;
+    gap: 0;
+    max-height: 80vh;
     overflow-y: auto;
-    gap: 14px;
-    transition: transform 0.3s ease;
+    overscroll-behavior: contain;
   }
 
+  .controls-collapsed {
+    transform: translateY(calc(100% - 152px));
+    overflow: hidden;
+  }
+
+  /* Backdrop */
+  .controls-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.12);
+    z-index: 9;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Toggle handle */
   .controls-toggle {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding: 0 0 8px;
+    padding: 12px 0 4px;
     border: none;
     background: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
   }
 
   .controls-toggle-handle {
@@ -313,19 +449,54 @@ body,
     height: 4px;
     border-radius: 2px;
     background: #d1d5db;
+    transition: background 0.2s, width 0.2s;
   }
 
-  .controls-stowed {
-    transform: translateY(calc(100% - 28px));
-  }
-
-  .controls-stowed .controls-toggle-handle {
+  .controls-collapsed .controls-toggle-handle {
     background: #9ca3af;
+    width: 40px;
+  }
+
+  /* Swipe area: handle + peek, captures touch gestures */
+  .controls-swipe-area {
+    display: flex;
+    flex-direction: column;
+    touch-action: none;
+    flex-shrink: 0;
+  }
+
+  /* Peek section: always visible */
+  .controls-peek {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px 0 12px;
+    flex-shrink: 0;
+  }
+
+  /* Expandable body */
+  .controls-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .controls-body-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 4px;
+  }
+
+  /* Bigger touch targets */
+  .profile-buttons {
+    gap: 8px;
   }
 
   .profile-buttons button {
     padding: 10px 4px;
     gap: 4px;
+    border-radius: 10px;
+    min-height: 54px;
   }
 
   .profile-icon {
@@ -334,25 +505,36 @@ body,
   }
 
   .profile-label {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .contour-inputs input {
-    padding: 10px 10px;
-    font-size: 14px;
+    padding: 11px 10px;
+    font-size: 15px;
+    border-radius: 10px;
   }
 
   .apply-button {
-    padding: 12px 0;
-    font-size: 14px;
+    padding: 14px 0;
+    font-size: 15px;
+    border-radius: 10px;
+    font-weight: 700;
   }
 
+  /* Inline legend in controls */
+  .controls-legend {
+    display: block;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 12px;
+    margin-top: 2px;
+  }
+
+  /* Hide floating legend on mobile */
   .legend {
-    bottom: auto;
-    top: 12px;
-    right: 12px;
+    display: none;
   }
 
+  /* Error banner */
   .error-banner {
     bottom: auto;
     top: 12px;
@@ -362,7 +544,7 @@ body,
     max-width: none;
   }
 
-  /* Move geocoder below nav controls on mobile */
+  /* Geocoder full-width */
   .mapboxgl-ctrl-top-left {
     top: 0;
     left: 0;
@@ -373,10 +555,94 @@ body,
     max-width: none;
     width: 100%;
     margin: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+  }
+
+  /* Push zoom controls below the geocoder so they don't clip */
+  .mapboxgl-ctrl-top-right {
+    top: 56px;
+    right: 0;
+  }
+}
+
+/* ─── Landscape on mobile ─── */
+
+@media (max-width: 640px) and (orientation: landscape) {
+  .controls {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: auto;
+    right: 0;
+    width: 280px;
+    max-height: none;
+    border-radius: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    box-shadow: -2px 0 24px rgba(0, 0, 0, 0.08);
+    transform: none;
+    overflow-y: auto;
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .controls-collapsed {
+    transform: translateX(calc(100% - 48px));
+    overflow: hidden;
+  }
+
+  .controls-toggle {
+    padding: 8px 0 4px;
+  }
+
+  .controls-toggle-handle {
+    width: 28px;
+    height: 4px;
+  }
+
+  .controls-peek {
+    padding: 4px 0 8px;
+    gap: 8px;
+  }
+
+  .controls-body-inner {
+    gap: 10px;
+  }
+
+  .controls-backdrop {
+    display: block;
+  }
+
+  .mapboxgl-ctrl-top-left .mapboxgl-ctrl-geocoder {
+    max-width: 50%;
   }
 
   .mapboxgl-ctrl-top-right {
     top: 0;
-    right: 0;
+  }
+}
+
+/* ─── Tablet / medium screens ─── */
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .controls {
+    right: 12px;
+    width: 240px;
+  }
+}
+
+/* ─── Reduced motion ─── */
+
+@media (prefers-reduced-motion: reduce) {
+  .controls {
+    transition: none !important;
+  }
+
+  .controls-backdrop {
+    animation: none !important;
+  }
+
+  .spinner {
+    animation-duration: 1.5s;
   }
 }

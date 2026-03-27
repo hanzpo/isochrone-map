@@ -18,4 +18,4 @@ export const PROFILES: IsochroneProfile[] = [
 export const DEFAULT_CONTOUR_MINUTES = [10, 20, 30];
 export const DEFAULT_TRANSIT_MINUTES = 30;
 
-export const CONTOUR_COLORS = ['#6366F1', '#22C55E', '#F59E0B'];
+export const CONTOUR_COLORS = ['#0073E6', '#00B67A', '#F59E0B'];

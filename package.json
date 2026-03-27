@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:full": "vite --port 5173 & wrangler pages dev --proxy=5173 --compatibility-date=2024-01-01 --port=8788",
+    "dev:full": "trap 'kill 0' INT TERM; vite --port 5173 & wrangler pages dev --proxy=5173 --compatibility-date=2024-01-01 --port=8788 & wait",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

@@ -78,6 +78,10 @@ export function useIsochrone() {
     [profile, contourMinutes, transitMinutes],
   );
 
+  const clearData = useCallback(() => {
+    setState((prev) => (prev.data ? { ...prev, data: null } : prev));
+  }, []);
+
   return {
     ...state,
     profile,
@@ -88,5 +92,6 @@ export function useIsochrone() {
     transitMinutes,
     setTransitMinutes,
     generate,
+    clearData,
   };
 }

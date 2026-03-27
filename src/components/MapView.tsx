@@ -17,13 +17,23 @@ export function MapView() {
     setLocation({ lng, lat });
   }, []);
 
-  const { containerRef, ready, renderIsochrone } = useMap(onLocationSelect);
+  const { containerRef, ready, renderIsochrone, clearIsochrone } = useMap(onLocationSelect);
+
+  // Clear isochrone when location or mode changes (user must hit Apply again)
+  useEffect(() => {
+    if (location) {
+      clearIsochrone();
+      iso.clearData();
+    }
+  }, [location, iso.profile, clearIsochrone, iso.clearData]);
+
+  const contourMinutes = iso.isTransit ? [iso.transitMinutes] : iso.contourMinutes;
 
   useEffect(() => {
     if (iso.data) {
-      renderIsochrone(iso.data);
+      renderIsochrone(iso.data, contourMinutes);
     }
-  }, [iso.data, renderIsochrone]);
+  }, [iso.data, renderIsochrone, contourMinutes]);
 
   const handleApply = useCallback(() => {
     if (locationRef.current) {
@@ -46,11 +56,15 @@ export function MapView() {
           loading={iso.loading}
           hasLocation={!!location}
           onApply={handleApply}
+          showLegend={!!iso.data}
+          legendContourMinutes={contourMinutes}
+          legendProfile={iso.profile}
         />
       )}
+      {/* Floating legend - hidden on mobile (shown inline in Controls instead) */}
       {iso.data && (
         <Legend
-          contourMinutes={iso.isTransit ? [iso.transitMinutes] : iso.contourMinutes}
+          contourMinutes={contourMinutes}
           profile={iso.profile}
         />
       )}

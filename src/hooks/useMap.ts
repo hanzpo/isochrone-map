@@ -67,13 +67,13 @@ export function useMap(onLocationSelect: (lng: number, lat: number) => void) {
     if (markerRef.current) {
       markerRef.current.setLngLat([lng, lat]);
     } else {
-      markerRef.current = new mapboxgl.Marker({ color: '#1976D2' })
+      markerRef.current = new mapboxgl.Marker({ color: '#0a0a0a' })
         .setLngLat([lng, lat])
         .addTo(map);
     }
   }
 
-  const renderIsochrone = useCallback((data: IsochroneResult) => {
+  const renderIsochrone = useCallback((data: IsochroneResult, contourMinutes: number[]) => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -82,11 +82,13 @@ export function useMap(onLocationSelect: (lng: number, lat: number) => void) {
     if (map.getLayer(ISOCHRONE_LAYER)) map.removeLayer(ISOCHRONE_LAYER);
     if (map.getSource(ISOCHRONE_SOURCE)) map.removeSource(ISOCHRONE_SOURCE);
 
+    // Build color expression from contourMinutes order (not feature order)
+    // so map colors match legend colors regardless of API response order.
     const colorExpr: mapboxgl.ExpressionSpecification = [
       'match',
       ['get', 'contour'],
-      ...data.features.flatMap((f, i) => [
-        f.properties?.contour ?? i,
+      ...contourMinutes.flatMap((minutes, i) => [
+        minutes,
         CONTOUR_COLORS[i % CONTOUR_COLORS.length],
       ]),
       CONTOUR_COLORS[0],
