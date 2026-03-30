@@ -151,13 +151,13 @@ export const CENSUS_CA_VECTORS: Record<Exclude<DemographicMetric, 'crime'>, stri
     'v_CA21_4911', // Multiple visible minorities
     'v_CA21_4914', // Not a visible minority
   ],
-  population: ['v_CA21_1', 'v_CA21_6'],
+  population: [], // density computed from geo.geojson pop + area fields
   education: [
-    'v_CA21_5817', // total 25-64
-    'v_CA21_5820', // no cert/diploma
-    'v_CA21_5823', // high school
-    'v_CA21_5826', // postsecondary cert
-    'v_CA21_5835', // bachelor's or higher
+    'v_CA21_5817', // total population 15+ in private households
+    'v_CA21_5820', // no certificate/diploma
+    'v_CA21_5823', // high school diploma
+    'v_CA21_5826', // postsecondary certificate/diploma
+    'v_CA21_5847', // bachelor's degree or higher
   ],
 };
 

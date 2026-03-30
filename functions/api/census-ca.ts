@@ -48,8 +48,14 @@ const METRIC_VECTORS: Record<string, string[]> = {
     'v_CA21_4911', // [13] Multiple visible minorities
     'v_CA21_4914', // [14] Not a visible minority
   ],
-  population: ['v_CA21_1', 'v_CA21_6'],
-  education: ['v_CA21_5817', 'v_CA21_5820', 'v_CA21_5823', 'v_CA21_5826', 'v_CA21_5835'],
+  population: [], // density computed from geo.geojson pop + area fields
+  education: [
+    'v_CA21_5817', // [0] total population 15+ in private households
+    'v_CA21_5820', // [1] no certificate/diploma
+    'v_CA21_5823', // [2] high school diploma
+    'v_CA21_5826', // [3] postsecondary certificate/diploma
+    'v_CA21_5847', // [4] bachelor's degree or higher
+  ],
 };
 
 function findCMA(lng: number, lat: number): string | null {
@@ -97,19 +103,26 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   const regions = JSON.stringify({ CMA: [cmaCode] });
 
   try {
-    // Fetch geometry and data in parallel (different endpoints)
-    const [geoRes, dataRes] = await Promise.all([
-      fetch('https://censusmapper.ca/api/v1/geo.geojson', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: buildFormData({
-          dataset: 'CA21',
-          level: 'CT',
-          regions,
-          api_key: CENSUSMAPPER_API_KEY,
-        }),
+    // Always fetch geometry
+    const geoRes = await fetch('https://censusmapper.ca/api/v1/geo.geojson', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: buildFormData({
+        dataset: 'CA21',
+        level: 'CT',
+        regions,
+        api_key: CENSUSMAPPER_API_KEY,
       }),
-      fetch('https://censusmapper.ca/api/v1/data.csv', {
+    });
+
+    if (!geoRes.ok) {
+      return jsonResponse({ error: `CensusMapper geo error: ${geoRes.status}` }, 502);
+    }
+
+    // Fetch CSV data only if we need vectors (population uses geo.geojson built-in fields)
+    let dataLookup = new Map<string, number[]>();
+    if (vectors.length > 0) {
+      const dataRes = await fetch('https://censusmapper.ca/api/v1/data.csv', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: buildFormData({
@@ -119,32 +132,28 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
           vectors: JSON.stringify(vectors),
           api_key: CENSUSMAPPER_API_KEY,
         }),
-      }),
-    ]);
+      });
 
-    if (!geoRes.ok) {
-      return jsonResponse({ error: `CensusMapper geo error: ${geoRes.status}` }, 502);
-    }
-    if (!dataRes.ok) {
-      return jsonResponse({ error: `CensusMapper data error: ${dataRes.status}` }, 502);
+      if (!dataRes.ok) {
+        return jsonResponse({ error: `CensusMapper data error: ${dataRes.status}` }, 502);
+      }
+
+      const csvText = await dataRes.text();
+      dataLookup = parseCSV(csvText, vectors);
     }
 
     const geojson = (await geoRes.json()) as GeoJSON.FeatureCollection;
-    const csvText = await dataRes.text();
-
-    // Parse CSV into lookup by GeoUID
-    const dataLookup = parseCSV(csvText, vectors);
 
     // Join data to geometry
     const features = geojson.features
       .map((f) => {
         const geoUID = String(f.properties?.id || '');
-        const vals = dataLookup.get(geoUID);
-        if (!vals) return null;
+        const vals = vectors.length > 0 ? dataLookup.get(geoUID) : [];
+        if (vectors.length > 0 && !vals) return null;
 
         const area = parseFloat(String(f.properties?.a || '0'));
         const pop = parseInt(String(f.properties?.pop || '0'));
-        const props = computeProperties(metric, vals, area, pop);
+        const props = computeProperties(metric, vals || [], area, pop);
         if (!props) return null;
 
         return {
