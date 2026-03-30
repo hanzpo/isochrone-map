@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { PROFILES, CONTOUR_COLORS } from '../config/map';
+import { DEMOGRAPHIC_LAYERS } from '../config/demographics';
 import type { IsochroneProfile } from '../types/map';
+import type { DemographicMetric } from '../types/demographics';
 
 interface ControlsProps {
   profile: IsochroneProfile['id'];
@@ -16,6 +18,10 @@ interface ControlsProps {
   showLegend?: boolean;
   legendContourMinutes?: number[];
   legendProfile?: IsochroneProfile['id'];
+  demographicMetric: DemographicMetric | null;
+  onDemographicMetricChange: (metric: DemographicMetric | null) => void;
+  demographicLoading: boolean;
+  tooZoomedOut: boolean;
 }
 
 function CarIcon({ className }: { className?: string }) {
@@ -61,7 +67,6 @@ interface DragState {
   startPos: number;
   currentPos: number;
   isDragging: boolean;
-  // Recent sample for instantaneous velocity (not start-to-end)
   recentPos: number;
   recentTime: number;
 }
@@ -80,6 +85,10 @@ export function Controls({
   showLegend,
   legendContourMinutes,
   legendProfile,
+  demographicMetric,
+  onDemographicMetricChange,
+  demographicLoading,
+  tooZoomedOut,
 }: ControlsProps) {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState(false);
@@ -88,7 +97,6 @@ export function Controls({
   const [isMobile, setIsMobile] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
 
-  // Detect mobile and orientation
   useEffect(() => {
     const mqMobile = window.matchMedia('(max-width: 640px)');
     const mqLandscape = window.matchMedia('(orientation: landscape)');
@@ -104,7 +112,6 @@ export function Controls({
     };
   }, []);
 
-  // Auto-collapse after apply finishes
   const wasLoading = useRef(false);
   useEffect(() => {
     if (wasLoading.current && !loading && isMobile) {
@@ -113,8 +120,6 @@ export function Controls({
     wasLoading.current = loading;
   }, [loading, isMobile]);
 
-  // Measure the collapsed offset (how far to push sheet off-screen).
-  // Uses offsetHeight which stays stable since we no longer animate content height.
   const getOffsets = useCallback(() => {
     const sheet = sheetRef.current;
     if (!sheet) return { collapsed: 0, prop: 'translateY' as const };
@@ -122,56 +127,35 @@ export function Controls({
       const peekWidth = 48;
       return { collapsed: Math.max(0, sheet.offsetWidth - peekWidth), prop: 'translateX' as const };
     }
-    const peekHeight = 152;
+    const peekHeight = 200;
     return { collapsed: Math.max(0, sheet.offsetHeight - peekHeight), prop: 'translateY' as const };
   }, [isLandscape]);
 
-  // Touch handlers for swipe gesture
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (!isMobile) return;
     const touch = e.touches[0];
     const pos = isLandscape ? touch.clientX : touch.clientY;
     const now = Date.now();
-    dragRef.current = {
-      startPos: pos,
-      currentPos: pos,
-      isDragging: false,
-      recentPos: pos,
-      recentTime: now,
-    };
+    dragRef.current = { startPos: pos, currentPos: pos, isDragging: false, recentPos: pos, recentTime: now };
   }, [isMobile, isLandscape]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const drag = dragRef.current;
     const sheet = sheetRef.current;
     if (!drag || !sheet || !isMobile) return;
-
     const touch = e.touches[0];
     const pos = isLandscape ? touch.clientX : touch.clientY;
     const delta = pos - drag.startPos;
-
     if (!drag.isDragging && Math.abs(delta) < 6) return;
     drag.isDragging = true;
-
-    // Update recent sample for velocity (keep samples ~50ms apart)
     const now = Date.now();
-    if (now - drag.recentTime > 40) {
-      drag.recentPos = drag.currentPos;
-      drag.recentTime = now;
-    }
+    if (now - drag.recentTime > 40) { drag.recentPos = drag.currentPos; drag.recentTime = now; }
     drag.currentPos = pos;
-
     const { collapsed, prop } = getOffsets();
     const baseOffset = expanded ? 0 : collapsed;
     let offset = baseOffset + delta;
-
-    // Rubber-band: dampen when dragging past bounds
-    if (offset < 0) {
-      offset = offset / 4;
-    } else if (offset > collapsed) {
-      offset = collapsed + (offset - collapsed) / 4;
-    }
-
+    if (offset < 0) offset = offset / 4;
+    else if (offset > collapsed) offset = collapsed + (offset - collapsed) / 4;
     sheet.style.transition = 'none';
     sheet.style.transform = `${prop}(${offset}px)`;
   }, [isMobile, isLandscape, expanded, getOffsets]);
@@ -180,39 +164,23 @@ export function Controls({
     const drag = dragRef.current;
     const sheet = sheetRef.current;
     if (!drag || !sheet || !isMobile) return;
-
-    if (!drag.isDragging) {
-      dragRef.current = null;
-      return;
-    }
-
-    // Instantaneous velocity from recent sample (not start-to-end)
+    if (!drag.isDragging) { dragRef.current = null; return; }
     const now = Date.now();
     const dt = Math.max(now - drag.recentTime, 1);
-    const velocity = (drag.currentPos - drag.recentPos) / dt; // px/ms
-
+    const velocity = (drag.currentPos - drag.recentPos) / dt;
     const { collapsed, prop } = getOffsets();
     const delta = drag.currentPos - drag.startPos;
-
-    // Decide snap target: flick (velocity) or position-based
     let shouldExpand: boolean;
     if (Math.abs(velocity) > 0.25) {
-      shouldExpand = velocity < 0; // negative = swipe up/left = expand
+      shouldExpand = velocity < 0;
     } else {
-      // Use proportional threshold based on current position
       const baseOffset = expanded ? 0 : collapsed;
       const currentOffset = Math.max(0, Math.min(collapsed, baseOffset + delta));
       shouldExpand = currentOffset < collapsed * 0.4;
     }
-
     const targetOffset = shouldExpand ? 0 : collapsed;
-
-    // Animate to snap point
     sheet.style.transition = 'transform 0.32s cubic-bezier(0.32, 0.72, 0, 1)';
     sheet.style.transform = `${prop}(${targetOffset}px)`;
-
-    // Clean up inline styles after animation so CSS class takes over.
-    // Timeout fallback in case transitionend doesn't fire (e.g., already at target).
     let cleaned = false;
     const cleanup = () => {
       if (cleaned) return;
@@ -223,7 +191,6 @@ export function Controls({
     };
     sheet.addEventListener('transitionend', cleanup);
     setTimeout(cleanup, 400);
-
     setExpanded(shouldExpand);
     dragRef.current = null;
   }, [isMobile, isLandscape, expanded, getOffsets]);
@@ -231,21 +198,13 @@ export function Controls({
   function handleInputChange(key: string, raw: string, commit: (val: number) => void, min: number, max: number) {
     setInputValues((prev) => ({ ...prev, [key]: raw }));
     const parsed = parseInt(raw);
-    if (!isNaN(parsed)) {
-      commit(Math.max(min, Math.min(max, parsed)));
-    }
+    if (!isNaN(parsed)) commit(Math.max(min, Math.min(max, parsed)));
   }
 
   function handleInputBlur(key: string, fallback: number, commit: (val: number) => void) {
     const raw = inputValues[key];
-    if (raw === undefined || raw === '') {
-      commit(fallback);
-    }
-    setInputValues((prev) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
+    if (raw === undefined || raw === '') commit(fallback);
+    setInputValues((prev) => { const next = { ...prev }; delete next[key]; return next; });
   }
 
   function getInputValue(key: string, stateValue: number): string {
@@ -256,7 +215,6 @@ export function Controls({
 
   return (
     <>
-      {/* Backdrop for expanded mobile sheet */}
       {isMobile && expanded && (
         <div className="controls-backdrop" onClick={() => setExpanded(false)} />
       )}
@@ -264,7 +222,7 @@ export function Controls({
         ref={sheetRef}
         className={`controls${isMobile && !expanded ? ' controls-collapsed' : ''}`}
       >
-        {/* Swipeable area: handle + peek section */}
+        {/* Swipeable area: handle + peek */}
         <div
           className="controls-swipe-area"
           onTouchStart={handleTouchStart}
@@ -279,116 +237,146 @@ export function Controls({
             <span className="controls-toggle-handle" />
           </button>
 
-          {/* Peek section: always visible on mobile */}
           <div className="controls-peek">
-          <div className="controls-header">
-            <h2>Isochrone</h2>
-            {loading && <span className="spinner" />}
-          </div>
-
-          <div className="control-group">
-            <label>Mode</label>
-            <div className="profile-buttons">
-              {PROFILES.map((p) => {
-                const Icon = PROFILE_ICONS[p.id];
-                return (
+            {/* Demographics section — always visible */}
+            <div className="control-section">
+              <div className="controls-header">
+                <h2>Demographics</h2>
+                {demographicLoading && <span className="spinner" />}
+              </div>
+              <div className="demographic-chips">
+                {DEMOGRAPHIC_LAYERS.map((layer) => (
                   <button
-                    key={p.id}
-                    className={profile === p.id ? 'active' : ''}
-                    onClick={() => onProfileChange(p.id)}
-                    title={p.label}
+                    key={layer.id}
+                    className={`demographic-chip${demographicMetric === layer.id ? ' active' : ''}${!layer.enabled ? ' disabled' : ''}`}
+                    onClick={() => {
+                      if (!layer.enabled) return;
+                      onDemographicMetricChange(
+                        demographicMetric === layer.id ? null : layer.id,
+                      );
+                    }}
+                    disabled={!layer.enabled}
+                    title={!layer.enabled ? 'Coming soon' : layer.label}
                   >
-                    <Icon className="profile-icon" />
-                    <span className="profile-label">{p.label}</span>
+                    {layer.label}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+              {tooZoomedOut && demographicMetric && (
+                <p className="zoom-hint">Zoom in to see demographic data</p>
+              )}
             </div>
-          </div>
           </div>
         </div>
 
-        {/* Expandable section */}
+        {/* Expandable: Travel Time section */}
         <div className="controls-body">
           <div className="controls-body-inner">
-            <div className="control-group">
-              {isTransit ? (
-                <>
-                  <label>
-                    Travel time <span className="label-unit">(min)</span>
-                  </label>
-                  <div className="contour-inputs">
-                    <input
-                      type="number"
-                      min={5}
-                      max={120}
-                      value={getInputValue('transit', transitMinutes)}
-                      onChange={(e) =>
-                        handleInputChange('transit', e.target.value, onTransitMinutesChange, 5, 120)
-                      }
-                      onBlur={() => handleInputBlur('transit', 30, onTransitMinutesChange)}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <label>
-                    Contours <span className="label-unit">(min)</span>
-                  </label>
-                  <div className="contour-inputs">
-                    {contourMinutes.map((minutes, i) => {
-                      const key = `contour-${i}`;
-                      return (
-                        <div key={i} className="contour-input-row">
-                          <span
-                            className="contour-dot"
-                            style={{ backgroundColor: CONTOUR_COLORS[i % CONTOUR_COLORS.length] }}
-                          />
-                          <input
-                            type="number"
-                            min={1}
-                            max={60}
-                            value={getInputValue(key, minutes)}
-                            onChange={(e) =>
-                              handleInputChange(
-                                key,
-                                e.target.value,
-                                (val) => {
+            <div className="control-section">
+              <div className="controls-header">
+                <h2>Travel Time</h2>
+                {loading && <span className="spinner" />}
+              </div>
+
+              <div className="control-group">
+                <label>Mode</label>
+                <div className="profile-buttons">
+                  {PROFILES.map((p) => {
+                    const Icon = PROFILE_ICONS[p.id];
+                    return (
+                      <button
+                        key={p.id}
+                        className={profile === p.id ? 'active' : ''}
+                        onClick={() => onProfileChange(p.id)}
+                        title={p.label}
+                      >
+                        <Icon className="profile-icon" />
+                        <span className="profile-label">{p.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="control-group">
+                {isTransit ? (
+                  <>
+                    <label>
+                      Travel time <span className="label-unit">(min)</span>
+                    </label>
+                    <div className="contour-inputs">
+                      <input
+                        type="number"
+                        min={5}
+                        max={120}
+                        value={getInputValue('transit', transitMinutes)}
+                        onChange={(e) =>
+                          handleInputChange('transit', e.target.value, onTransitMinutesChange, 5, 120)
+                        }
+                        onBlur={() => handleInputBlur('transit', 30, onTransitMinutesChange)}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <label>
+                      Contours <span className="label-unit">(min)</span>
+                    </label>
+                    <div className="contour-inputs">
+                      {contourMinutes.map((minutes, i) => {
+                        const key = `contour-${i}`;
+                        return (
+                          <div key={i} className="contour-input-row">
+                            <span
+                              className="contour-dot"
+                              style={{ backgroundColor: CONTOUR_COLORS[i % CONTOUR_COLORS.length] }}
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              max={60}
+                              value={getInputValue(key, minutes)}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  key,
+                                  e.target.value,
+                                  (val) => {
+                                    const updated = [...contourMinutes];
+                                    updated[i] = val;
+                                    onContourChange(updated);
+                                  },
+                                  1,
+                                  60,
+                                )
+                              }
+                              onBlur={() =>
+                                handleInputBlur(key, minutes, (val) => {
                                   const updated = [...contourMinutes];
                                   updated[i] = val;
                                   onContourChange(updated);
-                                },
-                                1,
-                                60,
-                              )
-                            }
-                            onBlur={() =>
-                              handleInputBlur(key, minutes, (val) => {
-                                const updated = [...contourMinutes];
-                                updated[i] = val;
-                                onContourChange(updated);
-                              })
-                            }
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
+                                })
+                              }
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <button
+                className="apply-button"
+                onClick={onApply}
+                disabled={!hasLocation || loading}
+              >
+                {loading ? 'Generating...' : 'Generate Isochrone'}
+              </button>
+
+              {!hasLocation && (
+                <p className="controls-hint">Click the map or search for an address</p>
               )}
             </div>
-
-            <button
-              className="apply-button"
-              onClick={onApply}
-              disabled={!hasLocation || loading}
-            >
-              {loading ? 'Generating...' : 'Apply'}
-            </button>
-
-            {!hasLocation && (
-              <p className="controls-hint">Click the map or search for an address</p>
-            )}
 
             {/* Inline legend on mobile */}
             {showLegend && legendContourMinutes && legendProfile && (
