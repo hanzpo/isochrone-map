@@ -252,8 +252,10 @@ export function useMap(
         if (popupRef.current) { popupRef.current.remove(); }
       };
 
-      map.on('mousemove', DEMO_LAYER, onMouseMove);
-      map.on('mouseleave', DEMO_LAYER, onMouseLeave);
+      if (layerConfig.id === 'race') {
+        map.on('mousemove', DEMO_LAYER, onMouseMove);
+        map.on('mouseleave', DEMO_LAYER, onMouseLeave);
+      }
     } else {
       // Interpolated coloring for numeric metrics
       const colorExpr: mapboxgl.ExpressionSpecification = [
